@@ -44,6 +44,25 @@ GitHub が送る通知メールを受け取る構成です。
 
 確認できたら、`Emails` 画面で `chakazuki@gmail.com` が `Verified` になっていることを確認します。
 
+### `Error adding chakazuki@gmail.com: email is already in use` と出たとき
+
+これは、`chakazuki@gmail.com` がすでに別の GitHub アカウントに登録されている意味です。  
+この repo の問題ではなく、GitHub アカウント側の状態です。
+
+対処は次の順です。
+
+1. まず、`chakazuki@gmail.com` を使っている別の GitHub アカウントがないか思い出す
+2. 心当たりがある場合は、そのアカウントにログインする
+3. `Settings` → `Emails` を開く
+4. `chakazuki@gmail.com` が登録されていたら、そのアカウントから外す
+5. その後、今使っている `Kazuki1222-tech` 側で再度 `Add email address` を実行する
+
+昔のアカウント名を忘れている場合は、`chakazuki@gmail.com` で GitHub のパスワード再設定を試してください。  
+そのメールアドレスに紐づくアカウントが分かれば、そのアカウントに入ってメール設定を整理できます。
+
+もし今すぐ `chakazuki@gmail.com` を移せない場合でも、現在の GitHub アカウントで `Verified` になっている別メールアドレスがあれば、ひとまずそのアドレスで通知確認はできます。  
+監視自体は止まりません。違うのは、GitHub 通知メールの受け取り先だけです。
+
 ## 4. 通知メールを有効にする
 
 1. 右上のプロフィール画像を押す
@@ -158,4 +177,3 @@ cron: "*/30 * * * *"
 - workflow 実行成功
 - artifact 保存成功
 - 対象日付の DOM 判定成功
-
