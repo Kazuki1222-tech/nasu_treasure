@@ -69,6 +69,7 @@ If the page title or body indicates a Cloudflare verification page, the run is c
 - `.github/workflows/reserva-monitor.yml`: scheduled monitor workflow
 - `scripts/monitor-reserva.mjs`: Playwright based checker
 - `package.json`: local and CI dependencies
+- `docs/github-notification-setup-ja.md`: GitHub email notification setup guide
 
 ## Setup
 
@@ -112,3 +113,9 @@ npm run monitor
 ```
 
 Artifacts are written to `artifacts/` by default.
+
+## Personal setup guide
+
+For the step-by-step GitHub account setup needed to receive mail at `chakazuki@gmail.com`, read:
+
+- [docs/github-notification-setup-ja.md](docs/github-notification-setup-ja.md)
