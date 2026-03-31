@@ -19,12 +19,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -38,7 +38,7 @@ jobs:
 
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reserva-monitor-${{ github.run_id }}
           path: artifacts/
@@ -59,7 +59,7 @@ jobs:
       - name: Look for existing alert issue
         id: existing_issue
         if: steps.evaluate.outputs.any_available == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -76,7 +76,7 @@ jobs:
       - name: Create alert issue
         id: create_issue
         if: steps.evaluate.outputs.any_available == 'true' && steps.existing_issue.outputs.issue_number == ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('node:fs');
