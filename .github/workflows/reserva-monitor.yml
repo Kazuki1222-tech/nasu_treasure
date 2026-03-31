@@ -86,6 +86,8 @@ jobs:
             const lines = [
               '# RESERVA target date became available',
               '',
+              '@Kazuki1222-tech target date availability was detected.',
+              '',
               `- checkedAt: ${result.checkedAt}`,
               `- run: ${runUrl}`,
               '',
