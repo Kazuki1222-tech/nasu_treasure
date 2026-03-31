@@ -1,0 +1,15 @@
+{
+  "name": "nasu-treasure-reserva-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitHub Actions based RESERVA monitor for Treasure Stone Park.",
+  "scripts": {
+    "monitor": "node scripts/monitor-reserva.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.53.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

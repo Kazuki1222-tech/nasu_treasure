@@ -1,0 +1,115 @@
+name: RESERVA Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reserva-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run monitor
+        run: npm run monitor
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reserva-monitor-${{ github.run_id }}
+          path: artifacts/
+          if-no-files-found: error
+
+      - name: Evaluate result
+        id: evaluate
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const result = JSON.parse(fs.readFileSync('artifacts/reserva-monitor.json', 'utf8'));
+          const anyAvailable = result.anyAvailable ? 'true' : 'false';
+          const pageState = result.pageState || 'error';
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `any_available=${anyAvailable}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `page_state=${pageState}\n`);
+          NODE
+
+      - name: Look for existing alert issue
+        id: existing_issue
+        if: steps.evaluate.outputs.any_available == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const targetTitle = 'RESERVA alert: target date became available';
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existing = issues.find((issue) => issue.title === targetTitle);
+            core.setOutput('issue_number', existing ? String(existing.number) : '');
+
+      - name: Create alert issue
+        id: create_issue
+        if: steps.evaluate.outputs.any_available == 'true' && steps.existing_issue.outputs.issue_number == ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const result = JSON.parse(fs.readFileSync('artifacts/reserva-monitor.json', 'utf8'));
+            const { owner, repo } = context.repo;
+            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const lines = [
+              '# RESERVA target date became available',
+              '',
+              `- checkedAt: ${result.checkedAt}`,
+              `- run: ${runUrl}`,
+              '',
+              '## Target dates',
+            ];
+            for (const [id, status] of Object.entries(result.targetDates || {})) {
+              lines.push(`- ${id}: ${status.summary}`);
+            }
+            if ((result.notes || []).length > 0) {
+              lines.push('', '## Notes');
+              for (const note of result.notes) {
+                lines.push(`- ${note}`);
+              }
+            }
+            const issue = await github.rest.issues.create({
+              owner,
+              repo,
+              title: 'RESERVA alert: target date became available',
+              body: lines.join('\n'),
+            });
+            core.setOutput('issue_number', String(issue.data.number));
+
+      - name: Fail once to trigger Actions email
+        if: steps.create_issue.outputs.issue_number != ''
+        run: |
+          echo "Availability detected. Alert issue #${{ steps.create_issue.outputs.issue_number }} created."
+          exit 1
