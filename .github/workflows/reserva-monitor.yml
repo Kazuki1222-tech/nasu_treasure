@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      test_alert:
+        description: "Force a one-off test alert notification path"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: reserva-monitor
@@ -50,15 +56,22 @@ jobs:
           node <<'NODE'
           const fs = require('node:fs');
           const result = JSON.parse(fs.readFileSync('artifacts/reserva-monitor.json', 'utf8'));
+          const forcedTestAlert = process.env.FORCED_TEST_ALERT === 'true';
           const anyAvailable = result.anyAvailable ? 'true' : 'false';
           const pageState = result.pageState || 'error';
+          const shouldAlert = result.anyAvailable || forcedTestAlert ? 'true' : 'false';
+          const alertMode = forcedTestAlert ? 'test' : 'availability';
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `any_available=${anyAvailable}\n`);
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `page_state=${pageState}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `should_alert=${shouldAlert}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `alert_mode=${alertMode}\n`);
           NODE
+        env:
+          FORCED_TEST_ALERT: ${{ github.event_name == 'workflow_dispatch' && inputs.test_alert }}
 
       - name: Look for existing alert issue
         id: existing_issue
-        if: steps.evaluate.outputs.any_available == 'true'
+        if: steps.evaluate.outputs.should_alert == 'true' && steps.evaluate.outputs.alert_mode == 'availability'
         uses: actions/github-script@v8
         with:
           script: |
@@ -75,7 +88,7 @@ jobs:
 
       - name: Create alert issue
         id: create_issue
-        if: steps.evaluate.outputs.any_available == 'true' && steps.existing_issue.outputs.issue_number == ''
+        if: steps.evaluate.outputs.should_alert == 'true' && (steps.evaluate.outputs.alert_mode == 'test' || steps.existing_issue.outputs.issue_number == '')
         uses: actions/github-script@v8
         with:
           script: |
@@ -83,13 +96,18 @@ jobs:
             const result = JSON.parse(fs.readFileSync('artifacts/reserva-monitor.json', 'utf8'));
             const { owner, repo } = context.repo;
             const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const alertMode = process.env.ALERT_MODE;
+            const isTest = alertMode === 'test';
             const lines = [
-              '# RESERVA target date became available',
+              isTest ? '# RESERVA notification test' : '# RESERVA target date became available',
               '',
-              '@Kazuki1222-tech target date availability was detected.',
+              isTest
+                ? '@Kazuki1222-tech GitHub Actions notification path test was triggered.'
+                : '@Kazuki1222-tech target date availability was detected.',
               '',
               `- checkedAt: ${result.checkedAt}`,
               `- run: ${runUrl}`,
+              `- alertMode: ${alertMode}`,
               '',
               '## Target dates',
             ];
@@ -105,13 +123,17 @@ jobs:
             const issue = await github.rest.issues.create({
               owner,
               repo,
-              title: 'RESERVA alert: target date became available',
+              title: isTest
+                ? `RESERVA test alert: notification path check (${context.runId})`
+                : 'RESERVA alert: target date became available',
               body: lines.join('\n'),
             });
             core.setOutput('issue_number', String(issue.data.number));
+        env:
+          ALERT_MODE: ${{ steps.evaluate.outputs.alert_mode }}
 
       - name: Fail once to trigger Actions email
         if: steps.create_issue.outputs.issue_number != ''
         run: |
-          echo "Availability detected. Alert issue #${{ steps.create_issue.outputs.issue_number }} created."
+          echo "Alert mode: ${{ steps.evaluate.outputs.alert_mode }}. Alert issue #${{ steps.create_issue.outputs.issue_number }} created."
           exit 1
