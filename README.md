@@ -23,7 +23,7 @@ This project intentionally does not use GAS anymore. It is a GitHub Actions base
 4. Detect bot challenge pages and record them without crashing the workflow.
 5. Read the DOM directly and determine whether `20260411` or `20260412` is selectable.
 6. Save a JSON result file and a screenshot for every run as workflow artifacts.
-7. When either target date becomes selectable for the first time, create one GitHub Issue and fail that run once so GitHub Actions can send its workflow failure email.
+7. When either target date becomes selectable for the first time, create one GitHub Issue and mention `@Kazuki1222-tech`.
 8. Avoid duplicate alert runs after the first alert issue has already been created.
 
 ### Notification requirements
@@ -32,7 +32,7 @@ This project intentionally does not use GAS anymore. It is a GitHub Actions base
 2. Email delivery must go to `chakazuki@gmail.com`.
 3. That email address must be configured and verified in the target GitHub account's notification settings.
 4. Repository Issues must be enabled.
-5. GitHub Actions email notifications must be enabled for the GitHub account that owns or edits the scheduled workflow.
+5. GitHub Actions email notifications are optional, but recommended for actual workflow errors.
 
 ### Non-functional requirements
 
@@ -59,7 +59,7 @@ If the page title or body indicates a Cloudflare verification page, the run is c
 
 1. Page opens normally and both target date inputs exist.
 2. Target dates are disabled, so the run completes successfully with no alert issue creation.
-3. One or both target dates become enabled, so the workflow creates the alert issue and fails once.
+3. One or both target dates become enabled, so the workflow creates the alert issue and completes successfully.
 4. The alert issue already exists and the dates are still enabled, so the workflow does not create a duplicate issue.
 5. Cloudflare challenge is shown, so the workflow uploads artifacts and records `pageState=challenge` without creating an availability alert.
 6. Navigation or parsing fails, so the workflow records `pageState=error` and uploads artifacts.
@@ -75,8 +75,8 @@ If the page title or body indicates a Cloudflare verification page, the run is c
 
 1. Create a GitHub repository from this project.
 2. In the GitHub account that should receive mail, verify `chakazuki@gmail.com` as an email address.
-3. Enable email notifications for GitHub Actions.
-4. Enable repository watching or at least issue notifications if you also want the issue email.
+3. Enable GitHub email notifications if you also want mail for real workflow failures.
+4. Enable repository watching or at least issue and mention notifications.
 5. Push the repository to the default branch.
 6. Run the workflow once with `workflow_dispatch`.
 

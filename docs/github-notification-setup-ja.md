@@ -11,10 +11,7 @@
 - `chakazuki@gmail.com`
 
 この監視は `GitHub Actions` で 30 分おきに実行されます。  
-`2026-04-11` または `2026-04-12` が予約可能になったときに、次の 2 経路で GitHub 通知が飛ぶ想定です。
-
-1. `Actions` 実行失敗通知
-2. `Issue` 作成と `@Kazuki1222-tech` メンション通知
+`2026-04-11` または `2026-04-12` が予約可能になったときは、`Issue` 作成と `@Kazuki1222-tech` メンション通知で知らせます。
 
 ## 1. 先に理解しておくこと
 
@@ -25,7 +22,7 @@ GitHub が送る通知メールを受け取る構成です。
 
 1. `chakazuki@gmail.com` を GitHub アカウントに登録して確認済みにする
 2. GitHub の通知メールを有効にする
-3. `Actions` と `Issues` の通知を受け取れるようにする
+3. `Issues` と `Mentions` の通知を受け取れるようにする
 
 ## 2. GitHub にログインする
 
@@ -74,14 +71,14 @@ GitHub が送る通知メールを受け取る構成です。
 
 ここで重要なのは、GitHub からの通知メール自体を止めていないことです。
 
-## 5. `Actions` 通知を有効にする
+## 5. `Actions` 通知を有効にするか決める
 
 1. `Settings` → `Notifications` のまま下へ進む
 2. `Actions` に関する通知設定を確認する
 3. `Email` が有効になるように設定する
 
-この監視では、予約可能になったときに workflow を一度だけ `failed` にします。  
-この失敗通知を GitHub メールとして受け取るための設定です。
+これは予約通知用ではなく、workflow 自体が壊れたときの異常検知用です。  
+予約可能通知そのものは `Issue` と `Mention` で飛びます。
 
 ## 6. リポジトリ通知を有効にする
 
@@ -96,7 +93,8 @@ GitHub が送る通知メールを受け取る構成です。
 - `Actions`
 - `Mentions`
 
-今回の alert は `Issue` 作成と `@Kazuki1222-tech` メンションを使うので、`Issues` と `Mentions` は有効にしておく方が安全です。
+今回の alert は `Issue` 作成と `@Kazuki1222-tech` メンションを使うので、`Issues` と `Mentions` は必須です。  
+`Actions` は本当の実行エラーを受け取りたい場合に有効化してください。
 
 ## 7. 手動で一度動作確認する
 
@@ -128,11 +126,10 @@ GitHub が送る通知メールを受け取る構成です。
 
 1. GitHub Issue を 1 件作成する
 2. Issue 本文で `@Kazuki1222-tech` をメンションする
-3. その run を一度だけ `failed` にする
+3. run は成功のまま終了する
 
-この 2 本立てで通知されます。
+通知経路は次です。
 
-- `Actions failure` のメール
 - `Issue / Mention` のメール
 
 ## 10. 監視頻度を変える方法
@@ -162,10 +159,10 @@ cron: "*/30 * * * *"
 
 1. `chakazuki@gmail.com` が GitHub で `Verified` か
 2. GitHub の `Notifications` でメール通知が有効か
-3. リポジトリの `Watch` が `Custom` で `Issues` `Actions` `Mentions` を含んでいるか
+3. リポジトリの `Watch` が `Custom` で `Issues` `Mentions` を含んでいるか
 4. Gmail の `迷惑メール` に入っていないか
-5. `Actions` の run が本当に `failed` になっているか
-6. Issue が作成されているか
+5. Issue が作成されているか
+6. `@Kazuki1222-tech` メンション通知が止められていないか
 
 ## 12. 覚えておくこと
 

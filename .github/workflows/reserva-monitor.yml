@@ -132,8 +132,7 @@ jobs:
         env:
           ALERT_MODE: ${{ steps.evaluate.outputs.alert_mode }}
 
-      - name: Fail once to trigger Actions email
+      - name: Report alert creation
         if: steps.create_issue.outputs.issue_number != ''
         run: |
           echo "Alert mode: ${{ steps.evaluate.outputs.alert_mode }}. Alert issue #${{ steps.create_issue.outputs.issue_number }} created."
-          exit 1
