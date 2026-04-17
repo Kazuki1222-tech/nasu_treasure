@@ -1,15 +1,8 @@
 name: RESERVA Monitor
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
-  workflow_dispatch:
-    inputs:
-      test_alert:
-        description: "Force a one-off test alert notification path"
-        required: false
-        default: false
-        type: boolean
+  # Disabled: this workflow no longer has automatic or manual triggers.
+  workflow_call:
 
 concurrency:
   group: reserva-monitor
